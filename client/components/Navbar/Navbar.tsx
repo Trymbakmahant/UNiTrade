@@ -2,8 +2,9 @@
 
 import React from "react";
 import { User } from "lucide-react";
-
+import { useRouter } from "next/navigation";
 const Navbar = () => {
+  const router = useRouter();
   return (
     <nav className="bg-gray-900  border-b border-gray-700 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -16,19 +17,19 @@ const Navbar = () => {
           {/* Navigation Links */}
           <div className="flex items-center space-x-8">
             <a
-              href="#trade"
+              onClick={() => router.push("/trade")}
               className="text-white hover:text-gray-300 transition-colors"
             >
               Trade
             </a>
             <a
-              href="#portfolio"
+              onClick={() => router.push("/portfolio")}
               className="text-white hover:text-gray-300 transition-colors"
             >
               Portfolio
             </a>
             <a
-              href="#history"
+              onClick={() => router.push("/history")}
               className="text-white hover:text-gray-300 transition-colors"
             >
               History
