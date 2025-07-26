@@ -12,6 +12,17 @@ export default function Home() {
           height={38}
           priority
         />
+
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">
+            UNIFI with Reown Integration
+          </h1>
+          <p className="mb-6 text-gray-600">
+            Connect your wallet to get started
+          </p>
+          <appkit-button />
+        </div>
+
         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
           <li className="mb-2 tracking-[-.01em]">
             Get started by editing{" "}
