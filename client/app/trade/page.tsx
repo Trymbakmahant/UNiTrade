@@ -53,19 +53,17 @@ const tradingPairs = [
 
 // Available time intervals
 const timeIntervals = [
-  { value: "15m", label: "15 Min", days: 1, interval: "15m" },
-  { value: "30m", label: "30 Min", days: 1, interval: "30m" },
-  { value: "1h", label: "1 Hour", days: 1, interval: "1h" },
-  { value: "4h", label: "4 Hours", days: 1, interval: "4h" },
-  { value: "12h", label: "12 Hours", days: 1, interval: "12h" },
-  { value: "1d", label: "1 Day", days: 1, interval: "1d" },
-  { value: "3d", label: "3 Days", days: 3, interval: "1d" },
-  { value: "5d", label: "5 Days", days: 5, interval: "1d" },
-  { value: "1w", label: "1 Week", days: 7, interval: "1w" },
-  { value: "1m", label: "1 Month", days: 30, interval: "1d" },
-  { value: "3m", label: "3 Months", days: 90, interval: "1d" },
-  { value: "6m", label: "6 Months", days: 180, interval: "1d" },
+  { value: "15m", label: "15 Min", days: 1, interval: "1s" },
+
+  { value: "1d", label: "1 Day", days: 1, interval: "1m" },
+  { value: "3d", label: "3 Days", days: 3, interval: "3m" },
+  { value: "5d", label: "5 Days", days: 5, interval: "5m" },
+  { value: "1w", label: "1 Week", days: 7, interval: "15m" },
+  { value: "1m", label: "1 Month", days: 30, interval: "1h" },
+  { value: "3m", label: "3 Months", days: 90, interval: "4h" },
+  { value: "6m", label: "6 Months", days: 180, interval: "8h" },
   { value: "1y", label: "1 Year", days: 365, interval: "1d" },
+  { value: "5y", label: "5 Years", days: 1825, interval: "1w" },
 ];
 
 export default function TradePage() {

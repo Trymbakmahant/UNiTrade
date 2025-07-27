@@ -200,6 +200,12 @@ const getBinanceInterval = (days: number, interval?: string): string => {
 // Get the number of candles based on days and interval
 const getCandleCount = (days: number, interval: string): number => {
   // Calculate based on interval and days
+  if (interval === "1s") return Math.min(days * 24 * 60 * 60, 1000); // Max 1000 for 1s
+  if (interval === "3s") return Math.min(days * 24 * 60 * 20, 1000); // Max 1000 for 3s
+  if (interval === "5s") return Math.min(days * 24 * 60 * 12, 1000); // Max 1000 for 5s
+  if (interval === "10s") return Math.min(days * 24 * 60 * 6, 1000); // Max 1000 for 10s
+  if (interval === "15s") return Math.min(days * 24 * 60 * 4, 1000); // Max 1000 for 15s
+  if (interval === "30s") return Math.min(days * 24 * 60 * 2, 1000); // Max 1000 for 30s
   if (interval === "1m") return Math.min(days * 24 * 60, 1000); // Max 1000 for 1m
   if (interval === "3m") return Math.min(days * 24 * 20, 1000); // Max 1000 for 3m
   if (interval === "5m") return Math.min(days * 24 * 12, 1000); // Max 1000 for 5m

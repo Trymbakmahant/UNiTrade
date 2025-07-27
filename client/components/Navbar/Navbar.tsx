@@ -18,19 +18,19 @@ const Navbar = () => {
           <div className="flex items-center space-x-8">
             <a
               onClick={() => router.push("/trade")}
-              className="text-white hover:text-gray-300 transition-colors"
+              className="text-white cursor-pointer hover:text-gray-300 transition-colors"
             >
               Trade
             </a>
             <a
               onClick={() => router.push("/portfolio")}
-              className="text-white hover:text-gray-300 transition-colors"
+              className="text-white cursor-pointer hover:text-gray-300 transition-colors"
             >
               Portfolio
             </a>
             <a
               onClick={() => router.push("/history")}
-              className="text-white hover:text-gray-300 transition-colors"
+              className="text-white cursor-pointer hover:text-gray-300 transition-colors"
             >
               History
             </a>
