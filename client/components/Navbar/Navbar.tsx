@@ -23,16 +23,10 @@ const Navbar = () => {
               Trade
             </a>
             <a
-              onClick={() => router.push("/portfolio")}
+              onClick={() => router.push("/dashboard")}
               className="text-white cursor-pointer hover:text-gray-300 transition-colors"
             >
-              Portfolio
-            </a>
-            <a
-              onClick={() => router.push("/history")}
-              className="text-white cursor-pointer hover:text-gray-300 transition-colors"
-            >
-              History
+              Dashboard
             </a>
           </div>
           {/* Wallet Connection and User Profile */}
