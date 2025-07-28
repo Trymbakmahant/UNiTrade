@@ -1,3 +1,4 @@
+"use client";
 import Navbar from "@/components/Navbar/Navbar";
 import {
   Shield,
@@ -8,8 +9,10 @@ import {
   Coins,
   ArrowLeftRight,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <Navbar />
@@ -35,7 +38,10 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <appkit-button />
-              <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center gap-2">
+              <button
+                onClick={() => router.push("/trade")}
+                className="px-8 py-4 cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center gap-2"
+              >
                 Start Trading
                 <ArrowRight className="w-5 h-5" />
               </button>

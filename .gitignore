@@ -42,3 +42,26 @@ next-env.d.ts
 
 # cursor
 .cursor
+
+# Server specific
+server/node_modules/
+server/dist/
+server/.env
+server/.env.local
+server/.env.development
+server/.env.production
+server/logs/
+server/*.log
+server/error.log
+server/combined.log
+
+# Prisma
+server/prisma/migrations/
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# Database
+*.sqlite
+*.sqlite3
+SERVER_DOCUMENTATION.md
+server/API_DOCUMENTATION.md
