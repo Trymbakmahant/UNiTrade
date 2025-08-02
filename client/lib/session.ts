@@ -29,6 +29,14 @@ export const sessionUtils = {
 
       // Check if session has expired
       if (Date.now() > session.expiresAt) {
+        console.log("Session expired, clearing...");
+        sessionUtils.clearSession();
+        return null;
+      }
+
+      // Check if we have a valid token
+      if (!session.token) {
+        console.log("No token in session, clearing...");
         sessionUtils.clearSession();
         return null;
       }
@@ -78,5 +86,16 @@ export const sessionUtils = {
       }`;
     }
     return `${hours} hour${hours > 1 ? "s" : ""}`;
+  },
+
+  // New method to update session with new token
+  updateSessionToken: (newToken: string) => {
+    const session = sessionUtils.loadSession();
+    if (session) {
+      session.token = newToken;
+      session.expiresAt = Date.now() + SESSION_DURATION_MS;
+      localStorage.setItem("sessionData", JSON.stringify(session));
+      localStorage.setItem("authToken", newToken);
+    }
   },
 };

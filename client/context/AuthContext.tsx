@@ -50,35 +50,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     sessionUtils.clearSession();
   };
 
-  const refreshSession = async (token: string) => {
-    try {
-      const currentUser = await authAPI.getCurrentUser();
-      saveSession(token, currentUser);
-      setUser(currentUser);
-      return true;
-    } catch (error) {
-      console.error("Failed to refresh session:", error);
-      clearSession();
-      setUser(null);
-      return false;
-    }
-  };
-
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const session = loadSession();
         if (session) {
-          // Session exists and is valid, set user
+          // Set user immediately from session for better UX
           setUser(session.user);
 
-          // Optionally refresh the session in the background
-          // This ensures the token is still valid on the server
-          refreshSession(session.token);
+          // Verify session is still valid by calling the server
+          try {
+            const currentUser = await authAPI.getCurrentUser();
+            // Update session with fresh user data
+            saveSession(session.token, currentUser);
+            setUser(currentUser);
+          } catch (error) {
+            console.error("Session validation failed:", error);
+            // If session validation fails, try to refresh the token
+            try {
+              const response = await authAPI.refreshToken();
+              saveSession(response.token, response.user);
+              setUser(response.user);
+            } catch (refreshError) {
+              console.error("Token refresh failed:", refreshError);
+              clearSession();
+              setUser(null);
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to initialize auth:", error);
         clearSession();
+        setUser(null);
       } finally {
         setLoading(false);
       }

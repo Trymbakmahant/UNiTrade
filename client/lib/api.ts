@@ -1,4 +1,5 @@
 import axios from "axios";
+import { sessionUtils } from "./session";
 
 // Enhanced error interface
 interface EnhancedError extends Error {
@@ -6,6 +7,19 @@ interface EnhancedError extends Error {
     data?: { error?: string };
     status?: number;
   };
+}
+
+// Helper function to create enhanced error
+function createEnhancedError(
+  message: string,
+  response?: {
+    data?: { error?: string };
+    status?: number;
+  }
+): EnhancedError {
+  const error = new Error(message) as EnhancedError;
+  error.response = response;
+  return error;
 }
 
 // Create axios instance with base configuration
@@ -34,19 +48,35 @@ api.interceptors.request.use(
 // Response interceptor to handle auth errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Clear both session data and auth token
-      localStorage.removeItem("sessionData");
-      localStorage.removeItem("authToken");
-      window.location.href = "/";
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Try to refresh the token
+        const response = await authAPI.refreshToken();
+        const { token } = response;
+
+        // Update the token using session utilities
+        sessionUtils.updateSessionToken(token);
+
+        // Retry the original request with the new token
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, clear session and redirect to login
+        sessionUtils.clearSession();
+        window.location.href = "/";
+        return Promise.reject(refreshError);
+      }
     }
 
     // Extract error message from response
     const errorMessage =
       error.response?.data?.error || error.message || "An error occurred";
-    const enhancedError = new Error(errorMessage) as EnhancedError;
-    enhancedError.response = error.response;
+    const enhancedError = createEnhancedError(errorMessage, error.response);
 
     return Promise.reject(enhancedError);
   }
@@ -148,6 +178,11 @@ export const authAPI = {
 
   getCurrentUser: async (): Promise<User> => {
     const response = await api.get("/api/users/me");
+    return response.data;
+  },
+
+  refreshToken: async (): Promise<AuthResponse> => {
+    const response = await api.post("/api/auth/refresh");
     return response.data;
   },
 };
