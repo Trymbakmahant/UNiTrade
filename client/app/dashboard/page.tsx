@@ -1,5 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import {
+  userAPI,
+  DashboardStats,
+  TradeHistory,
+  PortfolioHolding,
+} from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,51 +22,135 @@ import {
 } from "lucide-react";
 import PriceChart from "@/components/PriceChart";
 
-// Mock dashboard data
-const dashboardData = {
-  totalBalance: "$45,230.50",
-  totalPL: "+$2,340.25",
-  totalPLPercentage: "+5.4%",
-  activeOrders: 3,
-  completedTrades: 127,
-  portfolioValue: "$42,890.25",
-  portfolioChange: "+$1,890.25",
-  portfolioChangePercentage: "+4.6%",
-  recentActivity: [
-    {
-      type: "Buy",
-      pair: "ETH/USDT",
-      amount: "2.5 ETH",
-      price: "$1,850",
-      time: "2 min ago",
-      status: "Completed",
-    },
-    {
-      type: "Sell",
-      pair: "BTC/USDT",
-      amount: "0.1 BTC",
-      price: "$29,500",
-      time: "15 min ago",
-      status: "Completed",
-    },
-    {
-      type: "Buy",
-      pair: "SOL/USDT",
-      amount: "50 SOL",
-      price: "$95.20",
-      time: "1 hour ago",
-      status: "Completed",
-    },
-  ],
-  topHoldings: [
-    { symbol: "ETH", amount: "5.2", value: "$9,620", change: "+2.4%" },
-    { symbol: "BTC", amount: "0.3", value: "$8,850", change: "+1.8%" },
-    { symbol: "SOL", amount: "120", value: "$11,424", change: "+5.2%" },
-    { symbol: "ADA", amount: "2000", value: "$1,200", change: "-0.8%" },
-  ],
+// Types for dashboard data
+interface DashboardData {
+  totalBalance: string;
+  totalPL: string;
+  totalPLPercentage: string;
+  activeOrders: number;
+  completedTrades: number;
+  portfolioValue: string;
+  portfolioChange: string;
+  portfolioChangePercentage: string;
+  recentActivity: Array<{
+    type: "BUY" | "SELL";
+    pair: string;
+    amount: string;
+    price: string;
+    time: string;
+    status: string;
+  }>;
+  topHoldings: Array<{
+    symbol: string;
+    amount: string;
+    value: string;
+    change: string;
+  }>;
+}
+
+// Fallback data when API is not available
+const fallbackData: DashboardData = {
+  totalBalance: "$0.00",
+  totalPL: "$0.00",
+  totalPLPercentage: "0%",
+  activeOrders: 0,
+  completedTrades: 0,
+  portfolioValue: "$0.00",
+  portfolioChange: "$0.00",
+  portfolioChangePercentage: "0%",
+  recentActivity: [],
+  topHoldings: [],
 };
 
 export default function DashboardPage() {
+  const { isAuthenticated } = useAuth();
+  const [dashboardData, setDashboardData] = useState(fallbackData);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadDashboardData();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [stats, tradeHistory, holdings] = await Promise.all([
+        userAPI.getDashboardStats(),
+        userAPI.getTradeHistory(),
+        userAPI.getPortfolioHoldings(),
+      ]);
+
+      // Transform API data to match the expected format
+      const transformedData = {
+        totalBalance: `$${stats.totalBalance.toLocaleString()}`,
+        totalPL: `${
+          stats.totalPL >= 0 ? "+" : ""
+        }$${stats.totalPL.toLocaleString()}`,
+        totalPLPercentage: `${
+          stats.totalPLPercentage >= 0 ? "+" : ""
+        }${stats.totalPLPercentage.toFixed(1)}%`,
+        activeOrders: stats.activeOrders,
+        completedTrades: stats.completedTrades,
+        portfolioValue: `$${stats.portfolioValue.toLocaleString()}`,
+        portfolioChange: `${
+          stats.portfolioChange >= 0 ? "+" : ""
+        }$${stats.portfolioChange.toLocaleString()}`,
+        portfolioChangePercentage: `${
+          stats.portfolioChangePercentage >= 0 ? "+" : ""
+        }${stats.portfolioChangePercentage.toFixed(1)}%`,
+        recentActivity: tradeHistory.slice(0, 5).map((trade) => ({
+          type: trade.type as "BUY" | "SELL",
+          pair: trade.pair,
+          amount: `${trade.amount} ${trade.pair.split("-")[0].toUpperCase()}`,
+          price: `$${trade.price.toFixed(2)}`,
+          time: new Date(trade.createdAt).toLocaleString(),
+          status: trade.status,
+        })),
+        topHoldings: holdings.map((holding) => ({
+          symbol: holding.symbol,
+          amount: holding.amount.toString(),
+          value: `$${holding.value.toLocaleString()}`,
+          change: `${
+            holding.changePercentage >= 0 ? "+" : ""
+          }${holding.changePercentage.toFixed(1)}%`,
+        })),
+      };
+
+      setDashboardData(transformedData);
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+      setDashboardData(fallbackData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center text-gray-400">Loading dashboard...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center text-gray-400">
+            Please sign in to view your dashboard
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
@@ -241,12 +333,12 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-4">
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          activity.type === "Buy"
+                          activity.type === "BUY"
                             ? "bg-green-500/20"
                             : "bg-red-500/20"
                         }`}
                       >
-                        {activity.type === "Buy" ? (
+                        {activity.type === "BUY" ? (
                           <ArrowUpRight className="w-5 h-5 text-green-400" />
                         ) : (
                           <ArrowDownRight className="w-5 h-5 text-red-400" />
@@ -264,7 +356,7 @@ export default function DashboardPage() {
                     <div className="text-right">
                       <Badge
                         className={`${
-                          activity.type === "Buy"
+                          activity.type === "BUY"
                             ? "bg-green-500 text-white"
                             : "bg-red-500 text-white"
                         }`}

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { tradingAPI, Order } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +69,7 @@ const timeIntervals = [
 ];
 
 export default function TradePage() {
+  const { isAuthenticated } = useAuth();
   const [selectedPair, setSelectedPair] = useState("eth-usdt");
   const [selectedInterval, setSelectedInterval] = useState("1d");
   const [orderForm, setOrderForm] = useState({
@@ -74,6 +77,9 @@ export default function TradePage() {
     price: "",
     total: "",
   });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [orderLoading, setOrderLoading] = useState(false);
 
   const currentPair =
     tradingPairs.find((pair) => pair.value === selectedPair) || tradingPairs[0];
@@ -102,9 +108,62 @@ export default function TradePage() {
     });
   };
 
-  const handlePlaceOrder = () => {
-    // Handle order placement logic here
-    console.log("Placing order:", orderForm);
+  // Load orders on component mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadOrders();
+    }
+  }, [isAuthenticated]);
+
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const userOrders = await tradingAPI.getOrders();
+      setOrders(userOrders);
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!isAuthenticated) {
+      alert("Please sign in to place orders");
+      return;
+    }
+
+    if (!orderForm.amount || !orderForm.price) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      setOrderLoading(true);
+      const newOrder = await tradingAPI.createOrder({
+        pair: selectedPair,
+        type: "BUY", // You can add a toggle for BUY/SELL
+        amount: parseFloat(orderForm.amount),
+        price: parseFloat(orderForm.price),
+      });
+
+      // Add the new order to the list
+      setOrders((prev) => [newOrder, ...prev]);
+
+      // Reset form
+      setOrderForm({
+        amount: "",
+        price: "",
+        total: "",
+      });
+
+      alert("Order placed successfully!");
+    } catch (error: any) {
+      console.error("Failed to place order:", error);
+      alert(error.response?.data?.message || "Failed to place order");
+    } finally {
+      setOrderLoading(false);
+    }
   };
 
   return (
@@ -317,13 +376,100 @@ export default function TradePage() {
               <Button
                 onClick={handlePlaceOrder}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
+                disabled={orderLoading || !isAuthenticated}
               >
-                Place Order
+                {orderLoading
+                  ? "Placing Order..."
+                  : isAuthenticated
+                  ? "Place Order"
+                  : "Sign In to Trade"}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Orders Section */}
+      {isAuthenticated && (
+        <div className="mt-8">
+          <Card className="bg-gray-800 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white">Your Orders</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center text-gray-400">
+                  Loading orders...
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center text-gray-400">No orders found</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-gray-700 hover:bg-gray-700/50">
+                      <TableHead className="text-gray-300">Pair</TableHead>
+                      <TableHead className="text-gray-300">Type</TableHead>
+                      <TableHead className="text-gray-300">Amount</TableHead>
+                      <TableHead className="text-gray-300">Price</TableHead>
+                      <TableHead className="text-gray-300">Total</TableHead>
+                      <TableHead className="text-gray-300">Status</TableHead>
+                      <TableHead className="text-gray-300">Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <TableRow
+                        key={order.id}
+                        className="border-gray-700 hover:bg-gray-700/50"
+                      >
+                        <TableCell className="text-white font-mono">
+                          {order.pair.toUpperCase()}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              order.type === "BUY"
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            {order.type}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-gray-300 font-mono">
+                          {order.amount}
+                        </TableCell>
+                        <TableCell className="text-gray-300 font-mono">
+                          ${order.price.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-gray-300 font-mono">
+                          ${order.total.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-medium ${
+                              order.status === "COMPLETED"
+                                ? "bg-green-500/20 text-green-400"
+                                : order.status === "PENDING"
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            {order.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-gray-400 text-sm">
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

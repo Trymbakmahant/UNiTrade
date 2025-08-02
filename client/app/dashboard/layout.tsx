@@ -13,11 +13,13 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import SessionStatus from "@/components/SessionStatus";
 
 // Navigation items
 const navigationItems = [
   { icon: Home, label: "Dashboard", href: "/dashboard", active: false },
   { icon: Plus, label: "Create Order", href: "/trade", active: false },
+  { icon: TrendingUp, label: "Swap", href: "/dashboard/swap", active: false },
   { icon: List, label: "Orders", href: "/orders", active: false },
   { icon: Clock, label: "History", href: "/dashboard/history", active: false },
   { icon: User, label: "Profile", href: "/dashboard/profile", active: false },
@@ -58,6 +60,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+
+        {/* Session Status */}
+        <div className="mt-8">
+          <SessionStatus />
+        </div>
       </div>
 
       {/* Main Content */}

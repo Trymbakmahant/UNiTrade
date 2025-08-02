@@ -6,6 +6,7 @@ import { WagmiProvider, cookieToInitialState, type Config } from "wagmi";
 import { createAppKit } from "@reown/appkit/react";
 import { config, networks, projectId, wagmiAdapter } from "@/config";
 import { sepolia } from "@reown/appkit/networks";
+import { AuthProvider } from "./AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +46,9 @@ export default function ContextProvider({
 
   return (
     <WagmiProvider config={config as Config} initialState={initialState}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
     </WagmiProvider>
   );
 }
